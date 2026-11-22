@@ -1,0 +1,35 @@
+sky: sun elevation in the photo 15.5 deg, turned to azimuth -112 deg
+sky: horizon colour away from the sun (0.595, 0.622, 0.651), toward the sun (0.791, 0.719, 0.623)
+fir_a            trunk tris=  198, foliage tris=  928, height 81.1, crown width 32.0
+fir_b            trunk tris=  198, foliage tris=  880, height 66.6, crown width 33.5
+fir_c            trunk tris=  198, foliage tris=  800, height 48.9, crown width 20.9
+fir_young        trunk tris=  198, foliage tris=  584, height 25.0, crown width 14.2
+pine_a           trunk tris=  498, foliage tris= 2128, height 86.8, crown width 39.2
+pine_b           trunk tris=  538, foliage tris= 2368, height 70.5, crown width 34.9
+broadleaf_a      trunk tris=  562, foliage tris= 2800, height 58.0, crown width 48.4
+broadleaf_b      trunk tris=  510, foliage tris= 2560, height 48.1, crown width 42.0
+bush_a           trunk tris=  112, foliage tris=  560, height 16.2, crown width 18.9
+bush_b           trunk tris=  112, foliage tris=  560, height 11.0, crown width 12.3
+grass_patch_a    tris=  488
+grass_patch_b    tris=  416
+grass_flowers    tris=  424
+grass_clump      tris=   80
+sedge            tris=  120
+fern_a           tris= 2384  x[ -1.73,  1.73] y[ 0.00,  1.50] z[ -1.56,  1.56]
+fern_b           tris= 2248  x[ -1.53,  1.53] y[ 0.00,  1.22] z[ -1.34,  1.34]
+fern_c           tris=  784  x[ -0.97,  0.97] y[ 0.00,  1.00] z[ -1.07,  1.07]
+herb_a           tris= 2385  x[ -0.77,  0.77] y[ 0.00,  3.10] z[ -0.58,  0.58]
+herb_b           tris= 2134  x[ -0.71,  0.71] y[ 0.00,  2.71] z[ -0.47,  0.47]
+mossrock_a       tris=11000  x[ -3.92,  3.92] y[-0.15,  5.00] z[ -5.90,  5.90]
+mossrock_b       tris= 5000  x[ -3.69,  3.69] y[-0.12,  3.73] z[ -3.64,  3.64]
+mossrock_c       tris=10589  x[ -3.72,  3.72] y[-0.19,  6.00] z[ -3.44,  3.44]
+mossrock_d       tris= 8994  x[ -3.72,  3.72] y[-0.13,  4.28] z[ -4.83,  4.83]
+log              tris=17978  x[ -8.03,  8.03] y[-0.94,  1.53] z[ -1.08,  1.08]
+firewood         tris=31524  x[ -2.29,  2.29] y[ 0.00,  1.39] z[ -2.41,  2.41]
+axe              tris= 3348  x[ -0.08,  0.08] y[ 0.00,  2.21] z[ -0.38,  0.38]
+stool            tris= 6324  x[ -0.92,  0.92] y[ 0.00,  1.55] z[ -0.96,  0.96]
+pot              tris= 3760  x[ -0.53,  0.53] y[ 0.00,  1.02] z[ -0.53,  0.53]
+bucket           tris= 5116  x[ -0.64,  0.64] y[ 0.00,  1.92] z[ -0.60,  0.60]
+picnic_table     tris=10210  x[ -3.92,  3.92] y[ 0.00,  2.61] z[ -5.29,  5.29]
+pier             tris=49200  x[ -4.45,  4.45] y[ 0.00, 16.23] z[-16.38, 16.38]
+lantern          tris= 8321  x[ -0.39,  0.39] y[ 0.00,  1.86] z[ -0.41,  0.41]

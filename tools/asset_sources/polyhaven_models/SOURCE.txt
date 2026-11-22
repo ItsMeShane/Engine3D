@@ -1,0 +1,2 @@
+Models from Poly Haven (https://polyhaven.com/models), licensed CC0 1.0. 1k glTF packages:
+rock_07, rock_09, tree_stump_01, wine_barrel_01, wooden_crate_02, stone_fire_pit

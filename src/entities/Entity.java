@@ -1,11 +1,13 @@
 package entities;
 
+import editor.Editable;
+import editor.Editor;
 import models.TexturedModel;
 import org.lwjgl.util.vector.Vector3f;
-import terrains.Terrain;
 
+import javax.swing.*;
 
-public class Entity {
+public class Entity implements Editable {
 
 	private TexturedModel model;
 	private Vector3f position;
@@ -18,13 +20,15 @@ public class Entity {
 	private String objPath;
 	private String texturePath;
 
-	public Entity(TexturedModel model, float scale, String name) {
+	public Entity(TexturedModel model, Vector3f position, float rotX, float rotY, float rotZ, float scale, String name) {
 		setModel(model);
 		setName(name);
+		this.position = position; // dont change
+		setRotX(rotX);
+		setRotY(rotY);
+		setRotZ(rotZ);
 		setScale(scale);
-		setPosition(new Vector3f());
 	}
-
 	public Entity(TexturedModel model, int textureIndex, Vector3f position, float rotX, float rotY, float rotZ, float scale) {
 		this.textureIndex = textureIndex;
 		setModel(model);
@@ -33,6 +37,11 @@ public class Entity {
 		setRotY(rotY);
 		setRotZ(rotZ);
 		setScale(scale);
+	}
+
+	/** Which cell of the model texture's atlas this entity uses (see ModelTexture.setNumberOfRows). */
+	public void setTextureIndex(int textureIndex) {
+		this.textureIndex = textureIndex;
 	}
 
 	public float getTextureXOffset() {
@@ -72,15 +81,10 @@ public class Entity {
 
 	public void setPosition(Vector3f position) {
 		this.position = position;
-	}
-	public void setPosition(float x, Terrain terrain, float z) {
-		this.position = new Vector3f(x, terrain.getHeightOfTerrain(x, z), z);
-	}
 
-	public void setRotation(Vector3f rot) {
-		setRotX(rot.getX());
-		setRotY(rot.getY());
-		setRotZ(rot.getZ());
+		((JSpinner) Editor.settingsMap.get(this).getComponents().get(10)).setValue(position.x);
+		((JSpinner) Editor.settingsMap.get(this).getComponents().get(16)).setValue(position.y);
+		((JSpinner) Editor.settingsMap.get(this).getComponents().get(22)).setValue(position.z);
 	}
 
 	public float getRotX() {
@@ -137,10 +141,5 @@ public class Entity {
 
 	public void setTexturePath(String texturePath, boolean shouldUpdateModel) {
 		this.texturePath = texturePath;
-	}
-
-	@Override
-	public String toString() {
-		return getName();
 	}
 }

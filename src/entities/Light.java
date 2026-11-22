@@ -1,8 +1,9 @@
 package entities;
 
+import editor.Editable;
 import org.lwjgl.util.vector.Vector3f;
 
-public class Light {
+public class Light implements Editable {
 
     private Vector3f position;
     private Vector3f color;
@@ -48,9 +49,6 @@ public class Light {
         this.color = color;
     }
 
-    @Override
-    public String toString() {
-        return getName();
-    }
+
 
 }

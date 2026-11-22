@@ -22,6 +22,7 @@ public class Loader {
     public static final List<Integer> vaoList = new ArrayList<>();
     public static final List<Integer> vboList = new ArrayList<>();
     public static final List<Integer> textures = new ArrayList<>();
+    private static final List<Integer> textures2D = new ArrayList<>(); // the ones anisotropic filtering applies to
 
     public static RawModel loadToVAO(float[] positions, float[] textureCoords, float[] normals, int[] indices) {
         int vaoID = createVAO();
@@ -79,7 +80,37 @@ public class Loader {
         }
         int textureID = texture.getTextureID();
         textures.add(textureID);
+        textures2D.add(textureID);
+        applyAnisotropy(textureID);
         return textureID;
+    }
+
+    /** Creates a texture from RGBA pixels generated at runtime (first row = v 0). Clamped at the edges, with mipmaps. */
+    public static int loadTexture(int width, int height, ByteBuffer rgba) {
+        int textureID = GL11.glGenTextures();
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID);
+        GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 1);
+        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA8, width, height, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, rgba);
+        GL30.glGenerateMipmap(GL11.GL_TEXTURE_2D);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR_MIPMAP_LINEAR);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
+        textures.add(textureID);
+        return textureID;
+    }
+
+    /** Sets (or, when the setting is off, removes) anisotropic filtering on every loaded 2D texture. */
+    public static void applyAnisotropy() {
+        for (int textureID : textures2D) applyAnisotropy(textureID);
+    }
+
+    private static void applyAnisotropy(int textureID) {
+        if (!GLContext.getCapabilities().GL_EXT_texture_filter_anisotropic) return;
+        float amount = GraphicsSettings.anisotropicFiltering
+                ? Math.min(GraphicsSettings.MAX_ANISOTROPY, GL11.glGetFloat(EXTTextureFilterAnisotropic.GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT)) : 1;
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID);
+        GL11.glTexParameterf(GL11.GL_TEXTURE_2D, EXTTextureFilterAnisotropic.GL_TEXTURE_MAX_ANISOTROPY_EXT, amount);
     }
 
     public static int loadCubeMap(String[] textureFileNames) {

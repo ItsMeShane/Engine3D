@@ -1,11 +1,13 @@
 package shaders;
 
-import entities.Camera;
 import entities.Light;
 import org.lwjgl.util.vector.Matrix4f;
+
 import org.lwjgl.util.vector.Vector3f;
 import org.lwjgl.util.vector.Vector4f;
 import toolbox.Maths;
+
+import entities.Camera;
 
 import java.util.List;
 

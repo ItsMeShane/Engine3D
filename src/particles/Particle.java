@@ -4,13 +4,13 @@ package particles;
 import org.lwjgl.util.vector.Vector2f;
 import org.lwjgl.util.vector.Vector3f;
 import renderEngine.DisplayManager;
-import textures.ParticleTexture;
+import toolbox.GameConstants;
 
 public class Particle {
 
-    private final float gravity;
     private final Vector3f position;
     private final Vector3f velocity;
+    private final float gravityEffect; // 1 = normal gravity, 0 = floats, negative = rises
     private final float lifeLength;
     private final float rotation;
     private final float scale;
@@ -21,14 +21,18 @@ public class Particle {
     private final Vector2f textureOffset2 = new Vector2f();
     private float blend;
 
-    public Particle(ParticleTexture texture, Vector3f position, Vector3f velocity, float lifeLength, float rotation, float scale, float gravity) {
+    public Particle(ParticleTexture texture, Vector3f position, Vector3f velocity, float lifeLength, float rotation, float scale) {
+        this(texture, position, velocity, 1, lifeLength, rotation, scale);
+    }
+
+    public Particle(ParticleTexture texture, Vector3f position, Vector3f velocity, float gravityEffect, float lifeLength, float rotation, float scale) {
+        this.gravityEffect = gravityEffect;
         this.texture = texture;
         this.position = position;
         this.velocity = velocity;
         this.lifeLength = lifeLength;
         this.rotation = rotation;
         this.scale = scale;
-        this.gravity = gravity;
 
         ParticleMaster.addParticle(this);
     }
@@ -36,7 +40,7 @@ public class Particle {
     private final Vector3f reusableParticle = new Vector3f();
     protected boolean update() {
         float delta = DisplayManager.getFrameTimeSeconds();
-        velocity.y += gravity * delta;
+        velocity.y += GameConstants.GRAVITY * gravityEffect * delta;
         reusableParticle.set(velocity);
         reusableParticle.scale(delta);
         Vector3f.add(reusableParticle, position, position);
@@ -64,15 +68,15 @@ public class Particle {
         offset.y = (float) row / texture.numberOfRows();
     }
 
-    public Vector3f getPosition() {
+    protected Vector3f getPosition() {
         return position;
     }
 
-    public float getRotation() {
+    protected float getRotation() {
         return rotation;
     }
 
-    public float getScale() {
+    protected float getScale() {
         return scale;
     }
 

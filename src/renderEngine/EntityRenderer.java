@@ -1,8 +1,8 @@
 package renderEngine;
 
-import entities.Entity;
 import models.RawModel;
 import models.TexturedModel;
+
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
@@ -11,7 +11,7 @@ import org.lwjgl.util.vector.Matrix4f;
 import shaders.StaticShader;
 import textures.ModelTexture;
 import toolbox.Maths;
-
+import entities.Entity;
 import java.util.List;
 import java.util.Map;
 
@@ -49,8 +49,17 @@ public class EntityRenderer {
 		if (texture.hasTransparency()) {
 			MasterRenderer.disableCulling();
 		}
-		shader.loadFakeLightingVariable(texture.isUsingFakeLighting());
+		shader.loadFakeLightingVariable(texture.isUseFakeLighting());
 		shader.loadShineVariables(texture.getShineDamper(), texture.getReflectivity());
+		shader.set("hasNormalMap", texture.getNormalMap() != 0);
+		shader.set("emissive", texture.getEmissive());
+		shader.set("wind", texture.getWindBend(), texture.getWindFlutter());
+		shader.set("twoSided", texture.isTwoSidedLighting());
+		shader.set("translucency", texture.getTranslucency());
+		if (texture.getNormalMap() != 0) {
+			GL13.glActiveTexture(GL13.GL_TEXTURE1);
+			GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture.getNormalMap());
+		}
 		GL13.glActiveTexture(GL13.GL_TEXTURE0);
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, model.texture().getID());
 	}

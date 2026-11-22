@@ -4,7 +4,6 @@ import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 import org.lwjgl.util.vector.Vector4f;
 import renderEngine.DisplayManager;
-import textures.ParticleTexture;
 
 import java.util.Random;
 
@@ -14,7 +13,6 @@ public  class ParticleSystem {
     private final float averageSpeed;
     private final float averageLifeLength;
     private final float averageScale;
-    private final float gravity;
 
     private final ParticleTexture texture;
 
@@ -22,22 +20,27 @@ public  class ParticleSystem {
     private boolean randomRotation = false;
     private Vector3f direction;
     private float directionDeviation = 0;
+    private float gravityEffect = 1;
 
     private final Random random = new Random();
 
-    public ParticleSystem(ParticleTexture texture, float pps, float speed, float lifeLength, float scale, float gravity) {
+    public ParticleSystem(ParticleTexture texture, float pps, float speed, float lifeLength, float scale) {
         this.texture = texture;
         this.pps = pps;
         this.averageSpeed = speed;
         this.averageLifeLength = lifeLength;
         this.averageScale = scale;
-        this.gravity = gravity;
     }
 
 
     public void setDirection(Vector3f direction, float deviation) {
         this.direction = new Vector3f(direction);
         this.directionDeviation = (float) (deviation * Math.PI);
+    }
+
+    /** 1 = particles fall with normal gravity (default), 0 = they float, negative = they rise (smoke, embers). */
+    public void setGravityEffect(float gravityEffect) {
+        this.gravityEffect = gravityEffect;
     }
 
     public void randomizeRotation() {
@@ -83,7 +86,7 @@ public  class ParticleSystem {
         velocity.scale(generateValue(averageSpeed, speedError));
         float scale = generateValue(averageScale, scaleError);
         float lifeLength = generateValue(averageLifeLength, lifeError);
-        new Particle(texture, new Vector3f(center), velocity, lifeLength, generateRotation(), scale, gravity);
+        new Particle(texture, new Vector3f(center), velocity, gravityEffect, lifeLength, generateRotation(), scale);
     }
 
     private float generateValue(float average, float errorMargin) {

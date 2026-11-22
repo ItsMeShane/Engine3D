@@ -1,19 +1,19 @@
 package terrains;
 
+import engineTester.MainGameLoop;
+import toolbox.GameConstants;
 
 import java.util.Random;
 
 public class HeightsGenerator {
 
-	private static final float AMPLITUDE = 50f;
-	private static final int OCTAVES = 5;
+	private static final float AMPLITUDE = 75f;
+	private static final int OCTAVES = 4;
 	private static final float ROUGHNESS = 0.1f;
 
 	private final Random random = new Random();
 	private final int xOffset;
 	private final int zOffset;
-
-	private final long TERRAIN_SEED = 23478234234L;
 	
 	//only works with POSITIVE gridX and gridZ values!
 	public HeightsGenerator(int gridX, int gridZ, int vertexCount) {
@@ -61,7 +61,7 @@ public class HeightsGenerator {
 	}
 
 	private float getNoise(int x, int z) {
-		random.setSeed(x * 49632L + z * 325176L + TERRAIN_SEED);
+		random.setSeed(x * 49632L + z * 325176L + GameConstants.SEED);
 		return random.nextFloat() * 2f - 1f;
 	}
 

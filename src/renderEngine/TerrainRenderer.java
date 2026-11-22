@@ -9,6 +9,7 @@ import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 import shaders.TerrainShader;
 import terrains.Terrain;
+import textures.TerrainTexture;
 import textures.TerrainTexturePack;
 import toolbox.Maths;
 
@@ -24,6 +25,10 @@ public class TerrainRenderer implements Serializable {
         terrainShader.start();
         terrainShader.loadProjectionMatrix(projectionMatrix);
         terrainShader.connectTextureUnits();
+        terrainShader.set("backgroundNormal", 6);
+        terrainShader.set("rNormal", 7);
+        terrainShader.set("gNormal", 8);
+        terrainShader.set("bNormal", 9);
         terrainShader.stop();
     }
 
@@ -58,6 +63,16 @@ public class TerrainRenderer implements Serializable {
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, texturePack.B_Texture().textureID());
         GL13.glActiveTexture(GL13.GL_TEXTURE4);
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, terrain.getBlendMap().textureID());
+
+        TerrainTexture[] ground = {texturePack.backgroundTexture(), texturePack.R_Texture(), texturePack.G_Texture(), texturePack.B_Texture()};
+        boolean allHaveNormalMaps = true;
+        for (int i = 0; i < ground.length; i++) {
+            allHaveNormalMaps &= ground[i].normalMapID() != 0;
+            GL13.glActiveTexture(GL13.GL_TEXTURE6 + i);
+            GL11.glBindTexture(GL11.GL_TEXTURE_2D, ground[i].normalMapID());
+        }
+        GL13.glActiveTexture(GL13.GL_TEXTURE0);
+        terrainShader.set("hasNormalMaps", allHaveNormalMaps);
 
     }
 

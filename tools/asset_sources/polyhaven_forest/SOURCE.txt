@@ -1,0 +1,6 @@
+Everything here is from Poly Haven (https://polyhaven.com), licensed CC0 1.0.
+
+maps/   1k texture maps of: fir_tree_01, pine_tree_01, island_tree_01, grass_medium_01, dandelion_01, fern_02, shrub_03,
+        forest_leaves_02, rocky_trail, forest_ground_04
+models/ 1k glTF packages (colour + normal maps only): fern_02, shrub_03, rock_moss_set_01, dead_quiver_trunk, dry_branches_medium_01, wooden_axe, folding_wooden_stool, brass_pot_01, wooden_bucket_01, wooden_picnic_table, modular_wooden_pier, wooden_lantern_01
+sky/    tonemapped panorama of the HDRI kloppenheim_06_puresky

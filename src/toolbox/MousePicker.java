@@ -12,7 +12,7 @@ import terrains.Terrain;
 public class MousePicker {
 
     private static final int RECURSION_COUNT = 200;
-    private static final float RAY_RANGE = 800;
+    private static final float RAY_RANGE = 600;
 
     private Vector3f currentRay = new Vector3f();
     private Vector3f currentTerrainPoint;
@@ -21,13 +21,13 @@ public class MousePicker {
     private Matrix4f viewMatrix;
     private final Camera camera;
 
-    private final Terrain terrain;
+    private final Terrain[][] terrains;
 
-    public MousePicker(Camera cam, Matrix4f projection, Terrain terrain) {
+    public MousePicker(Camera cam, Matrix4f projection, Terrain[][] terrains) {
         camera = cam;
         projectionMatrix = projection;
         viewMatrix = Maths.createViewMatrix(camera);
-        this.terrain = terrain;
+        this.terrains = terrains;
     }
 
     public Vector3f getCurrentTerrainPoint() {
@@ -90,6 +90,7 @@ public class MousePicker {
         float half = start + ((finish - start) / 2f);
         if (count >= RECURSION_COUNT) {
             Vector3f endPoint = getPointOnRay(ray, half);
+            Terrain terrain = getTerrain(endPoint.getX(), endPoint.getZ());
             if (terrain != null) {
                 return endPoint;
             } else {
@@ -110,11 +111,21 @@ public class MousePicker {
     }
 
     private boolean isUnderGround(Vector3f testPoint) {
+        Terrain terrain = getTerrain(testPoint.getX(), testPoint.getZ());
         float height = 0;
         if (terrain != null) {
             height = terrain.getHeightOfTerrain(testPoint.getX(), testPoint.getZ());
         }
         return testPoint.y < height;
     }
+
+    private Terrain getTerrain(float worldX, float worldZ) {
+        int gridX = (int) (worldX / Terrain.SIZE);
+        int gridZ = (int) (worldZ / Terrain.SIZE);
+
+        gridX = Math.min(gridX, 2);
+        gridZ = Math.min(gridZ, 2);
+
+        return terrains[gridX][gridZ];    }
 
 }

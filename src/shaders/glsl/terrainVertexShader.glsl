@@ -9,25 +9,30 @@ out vec3 surfaceNormal;
 out vec3 toLightVector[3];
 out vec3 toCameraVector;
 out float visibility;
+out vec4 shadowCoords;
+out vec3 worldPosition;
 
 uniform mat4 transformationMatrix;
 uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
+uniform mat4 toShadowMapSpace;
 uniform vec3 lightPosition[3];
 
 // fog
-const float density = 0.0025;
+uniform float fogDensity; // 0.002 by default (Environment)
 const float gradient = 5;
 
 uniform vec4 plane;
 
 void main(void){
 
-    vec4 worldPosition = transformationMatrix * vec4(position,1.0);
+    vec4 worldPos = transformationMatrix * vec4(position,1.0);
+    worldPosition = worldPos.xyz;
+    shadowCoords = toShadowMapSpace * worldPos;
 
-	gl_ClipDistance[0] = dot(worldPosition, plane);
+	gl_ClipDistance[0] = dot(worldPos, plane);
 
-	vec4 positionRelativeToCamera = viewMatrix * worldPosition;
+	vec4 positionRelativeToCamera = viewMatrix * worldPos;
 	gl_Position = projectionMatrix * positionRelativeToCamera;
 	pass_textureCoordinates = textureCoordinates;
 
@@ -35,11 +40,11 @@ void main(void){
 
 	surfaceNormal = (transformationMatrix * vec4(normal, 0.0)).xyz;
 	for (int i = 0; i < 3; i++) {
-		toLightVector[i] = lightPosition[i] - worldPosition.xyz;
+		toLightVector[i] = lightPosition[i] - worldPos.xyz;
 	}
-	toCameraVector = (inverse(viewMatrix) * vec4(0.0, 0.0, 0.0, 1.0)).xyz - worldPosition.xyz;
+	toCameraVector = (inverse(viewMatrix) * vec4(0.0, 0.0, 0.0, 1.0)).xyz - worldPos.xyz;
 
     float distance = length(positionRelativeToCamera.xyz);
-    visibility = exp(-pow((distance * density), gradient));
+    visibility = exp(-pow((distance * fogDensity), gradient));
     visibility = clamp(visibility, 0.0, 1.0);
 }
