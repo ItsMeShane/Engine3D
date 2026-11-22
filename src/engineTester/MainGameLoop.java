@@ -56,7 +56,7 @@ public class MainGameLoop {
 
 		List<Entity> entities = new ArrayList<>();
 		List<Light> lights = new ArrayList<>();
-		Camera camera;
+		Camera camera = new Camera();
 
 
 		// util
