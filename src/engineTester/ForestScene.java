@@ -21,7 +21,7 @@ import java.util.List;
 
 /**
  * "forest": a clearing by a lake in a conifer forest, late in the afternoon. Realistic counterpart of the
- * village scene, built from photo-scanned CC0 assets (see tools/BuildForestAssets and ASSET_CREDITS.md).
+ * village scene, built from photo-scanned CC0 assets.
  *
  * <pre>
  *                 north (-z)            the sun stands low in the north-north-west,

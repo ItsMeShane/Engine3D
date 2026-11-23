@@ -1,2 +1,0 @@
-Texture from ambientCG (https://ambientcg.com), licensed CC0 1.0.
-Grass005 - 1K colour map.

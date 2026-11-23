@@ -21,7 +21,7 @@ import java.util.Map;
 
 /**
  * "village": a low-poly lakeside village in a ring of wooded hills, for demo videos. Every engine feature has
- * its own spot, and everything is built from flat-coloured CC0 kit models (see ASSET_CREDITS.md) on ground made
+ * its own spot, and everything is built from flat-coloured CC0 kit models on ground made
  * to match them: large flat-shaded facets in flat colours.
  *
  * <pre>

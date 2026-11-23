@@ -1,2 +1,0 @@
-Textures from Poly Haven (https://polyhaven.com), licensed CC0 1.0.
-sand_01, dirt_floor, forrest_ground_01 - 1k diffuse maps.
