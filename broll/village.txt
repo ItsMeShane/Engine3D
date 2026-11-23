@@ -1,0 +1,72 @@
+# B-roll shots for the village scene.
+# In the game:   B = play all shots, N = next shot, K = print the current camera view as a "key" line
+
+# Low over the river mouth, then up and back until bridge, mills and village are all in view.
+shot opening_reveal 14
+  key  1249 1125     4  5  50
+  key  1262 1150    18 14 120
+  key  1295 1200    38 25 235
+
+# Close on the turning wheel and its reflection, from over the river.
+shot water_wheel 10
+  key  1262 1184    70 10  44   3
+  key  1262 1184   108  8  38   3
+
+# Glides over the bridge toward the village, at head height above the deck.
+shot bridge_crossing 12
+  key  1231 1136    90  6  34   4.95
+  key  1264 1136    90  6  34   7.25
+  key  1298 1137    96 -3  34   7.5
+
+# Around the fountain from the open north side: spray, market, villagers, lamp.
+shot plaza_orbit 14
+  key  1318 1236   330 16  62
+  key  1318 1236   356 16  62
+  key  1318 1236    22 16  62
+
+# Low dolly along the north side of the plaza, past the market stall and its merchant to the bench.
+shot market_detail 10
+  key  1345 1222     0  6  26  -2
+  key  1322 1224     0  6  26  -2
+
+# Cranes up past the turning rotor until the village shows behind the mill.
+shot windmill_rise 12
+  key  1344 1150    52 -6  85  12
+  key  1344 1150    43 12  85  24
+  key  1344 1150    34 24  95  30
+
+# The ship under sail, tracked from low over the river mouth as it passes and heads into the sun. The camera stays
+# where it is (1247 1085, 5 above the water) and turns with the ship: each key looks at the place the ship has
+# reached a third of the shot later.
+shot boat_passing 12
+  key  1280 985   161.9 -7.0 106  13
+  key  1246 997   180.7 -8.4  89  13
+  key  1210 1002  203.7 -8.1  92  13
+  key  1174 1001  220.9 -6.7 112  13
+
+# Low along the dock, past the fisher, while the ship crosses behind.
+shot dock_fisher 12
+  key  1300 1065   180  5  30   3
+  key  1300 1051   195  5  22   3
+
+# The south pond from its east shore, looking west into the sun: lily pads, reeds, glints on the water.
+shot pond_glints 12
+  key  1205 1352   262  9  88
+  key  1200 1372   284  8  84
+
+# Orbit of the crystal from just outside the ring of columns, looking back past the braziers over the valley.
+shot shrine_hill 12
+  key  1385 1400   208  9  44   8
+  key  1385 1400   242  9  44   8
+
+# The camp in its clearing, seen from the side the path arrives on: fire, camper, tent, log stack.
+shot forest_camp 10
+  key  1146 1198   250 12  34
+  key  1146 1198   285 12  34
+
+# Pulls back and up over the valley, then lifts its view from the village to the lake and the hills on the far
+# side (the last key looks at a point beyond the village, so the skyline comes into the frame).
+shot closing_crane 16
+  key  1310 1225   120 30 110
+  key  1285 1195   130 30 300
+  key  1486 1035   138 15.5 673
