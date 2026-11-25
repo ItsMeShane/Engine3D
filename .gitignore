@@ -27,3 +27,9 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+### Benchmark results ###
+bench/
+
+### Graphics settings saved from the editor ###
+graphics.properties
