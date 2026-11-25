@@ -16,14 +16,13 @@ import org.lwjgl.opengl.GL32;
 import org.lwjgl.opengl.GL33;
 import org.lwjgl.opengl.GL40;
 import org.lwjgl.opengl.GL42;
+import renderEngine.GraphicsSettings;
 
 public class WaterFrameBuffers {
 
-	protected static final int REFLECTION_WIDTH = 1280; // was 320x180: too blurry for a 1080p demo
-	private static final int REFLECTION_HEIGHT = 720;
-	
-	protected static final int REFRACTION_WIDTH = 1280;
-	private static final int REFRACTION_HEIGHT = 720;
+	// both buffers have the same size, 16:9 (see GraphicsSettings.waterBufferHeight)
+	private int REFLECTION_WIDTH, REFLECTION_HEIGHT;
+	private int REFRACTION_WIDTH, REFRACTION_HEIGHT;
 
 	private int reflectionFrameBuffer;
 	private int reflectionTexture;
@@ -34,6 +33,15 @@ public class WaterFrameBuffers {
 	private int refractionDepthTexture;
 
 	public WaterFrameBuffers() {//call when loading the game
+		setHeight(GraphicsSettings.waterBufferHeight);
+	}
+
+	/** Makes new buffers, 16:9 with this height, when the size changes (render thread only). */
+	public void setHeight(int height) {
+		if (height == REFLECTION_HEIGHT) return;
+		if (REFLECTION_HEIGHT != 0) cleanUp();
+		REFLECTION_WIDTH = REFRACTION_WIDTH = height * 16 / 9;
+		REFLECTION_HEIGHT = REFRACTION_HEIGHT = height;
 		initialiseReflectionFrameBuffer();
 		initialiseRefractionFrameBuffer();
 	}

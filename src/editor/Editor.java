@@ -5,6 +5,7 @@ import editor.customComponents.JTabbedPaneCustom;
 import entities.Camera;
 import entities.Entity;
 import entities.Light;
+import renderEngine.GraphicsSettings;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -12,6 +13,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -67,7 +69,118 @@ public class Editor extends JFrame {
         JPanel addEntitiesTab = createAddEntitiesTab();
         tabbedPaneCustom.addTab("Add", addEntitiesTab);
 
+        // graphics settings tab
+        tabbedPaneCustom.addTab("Graphics", createGraphicsTab());
+
         getContentPane().add(tabbedPaneCustom, BorderLayout.CENTER);
+    }
+
+
+
+    /** Copies each setting's current value into its control on the Graphics tab. */
+    private final List<Runnable> graphicsRefreshers = new ArrayList<>();
+    private boolean refreshingGraphics; // the controls are being set from the values: don't write them back
+
+    /**
+     * Every entry of GraphicsSettings, changed live: a check box for each switch, a list for each level (greyed out
+     * while the switch it belongs to is off). A timer keeps the controls in step with changes made elsewhere,
+     * such as the keys in the game window.
+     */
+    private JPanel createGraphicsTab() {
+        JPanel form = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.anchor = GridBagConstraints.WEST;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        int row = 0;
+        for (GraphicsSettings.Setting setting : GraphicsSettings.ALL) {
+            c.gridy = row++;
+            if (setting.isSwitch()) {
+                JCheckBox box = new JCheckBox(setting.label() + "   [" + setting.hotkey() + "]");
+                box.addActionListener(e -> {
+                    if (!refreshingGraphics) setting.set(box.isSelected() ? 1 : 0);
+                });
+                graphicsRefreshers.add(() -> box.setSelected(setting.get() != 0));
+                c.gridx = 0;
+                c.gridwidth = 2;
+                c.insets = new Insets(4, 6, 0, 6);
+                form.add(box, c);
+            } else {
+                JLabel label = new JLabel(setting.label());
+                JComboBox<String> list = new JComboBox<>();
+                for (int choice : setting.choices()) list.addItem(setting.text(choice));
+                list.addActionListener(e -> {
+                    if (!refreshingGraphics && list.getSelectedIndex() >= 0) setting.set(setting.choices()[list.getSelectedIndex()]);
+                });
+                GraphicsSettings.Setting required = setting.requires() == null ? null : GraphicsSettings.find(setting.requires());
+                graphicsRefreshers.add(() -> {
+                    int index = -1;
+                    for (int i = 0; i < setting.choices().length; i++) if (setting.choices()[i] == setting.get()) index = i;
+                    if (list.getSelectedIndex() != index) list.setSelectedIndex(index);
+                    boolean enabled = required == null || required.get() != 0;
+                    list.setEnabled(enabled);
+                    label.setEnabled(enabled);
+                });
+                c.gridx = 0;
+                c.gridwidth = 1;
+                c.weightx = 0;
+                c.insets = new Insets(1, 32, 1, 6);
+                form.add(label, c);
+                c.gridx = 1;
+                c.weightx = 1;
+                c.insets = new Insets(1, 6, 1, 6);
+                form.add(list, c);
+            }
+        }
+        c.gridy = row;
+        c.weighty = 1;
+        form.add(Box.createGlue(), c); // keeps the rows at the top
+
+        JLabel status = new JLabel(" ");
+        JButton save = new JButton("Save");
+        save.setToolTipText("Write the settings to " + GraphicsSettings.FILE.toAbsolutePath() + ": they are loaded at every start, also for recordings and benchmarks");
+        save.addActionListener(e -> {
+            try {
+                GraphicsSettings.save();
+                status.setText("Saved to " + GraphicsSettings.FILE);
+            } catch (IOException ex) {
+                status.setText("Could not save: " + ex.getMessage());
+            }
+        });
+        JButton defaults = new JButton("Built-in defaults");
+        defaults.addActionListener(e -> {
+            GraphicsSettings.resetToDefaults();
+            refreshGraphics();
+            status.setText("Built-in defaults (not saved)");
+        });
+        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        buttons.add(save);
+        buttons.add(defaults);
+        buttons.add(status);
+
+        JLabel help = new JLabel("<html><body style='width: 270px'>Changes apply at once. Save keeps them for the next start, recordings and "
+                + "benchmarks. Keys in [ ] switch them in the game window.</body></html>");
+        help.setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
+
+        JPanel tab = new JPanel(new BorderLayout());
+        tab.add(help, BorderLayout.NORTH);
+        JScrollPane scroll = new JScrollPane(form);
+        scroll.setBorder(null);
+        scroll.getVerticalScrollBar().setUnitIncrement(16);
+        tab.add(scroll, BorderLayout.CENTER);
+        tab.add(buttons, BorderLayout.SOUTH);
+
+        refreshGraphics();
+        new Timer(250, e -> refreshGraphics()).start();
+        return tab;
+    }
+
+    private void refreshGraphics() {
+        refreshingGraphics = true;
+        try {
+            for (Runnable refresher : graphicsRefreshers) refresher.run();
+        } finally {
+            refreshingGraphics = false;
+        }
     }
 
 

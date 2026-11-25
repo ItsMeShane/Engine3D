@@ -26,7 +26,8 @@ import java.util.List;
  *   2. water reflection and refraction buffers
  *   3. main view (scene, water, particles) into an off-screen HDR buffer, multisampled when anti-aliasing is on
  *   4. post-processing to the window
- * Features are switched with {@link GraphicsSettings}.
+ * Features are switched with {@link GraphicsSettings}; changed settings that need new buffers are applied at the
+ * start of the next frame.
  */
 public class FramePipeline {
 
@@ -35,7 +36,9 @@ public class FramePipeline {
     private final WaterRenderer waterRenderer;
     private final ShadowRenderer shadowRenderer = new ShadowRenderer();
     private final PostProcessing postProcessing;
-    private final Fbo multisampledScene, scene;
+    private Fbo multisampledScene;
+    private final Fbo scene;
+    private final int maxSamples = GL11.glGetInteger(GL30.GL_MAX_SAMPLES);
     private Fbo output; // null = the window
     private final List<Entity> reflected = new ArrayList<>(), submerged = new ArrayList<>();
 
@@ -43,9 +46,24 @@ public class FramePipeline {
         this.renderer = renderer;
         waterRenderer = new WaterRenderer(new WaterShader(), renderer.getProjectionMatrix(), waterFrameBuffers);
         int width = DisplayManager.renderWidth(), height = DisplayManager.renderHeight();
-        multisampledScene = new Fbo(width, height, GraphicsSettings.MSAA_SAMPLES);
+        multisampledScene = new Fbo(width, height, samples());
         scene = new Fbo(width, height, 0);
         postProcessing = new PostProcessing(width, height);
+    }
+
+    private int samples() {
+        return Math.min(GraphicsSettings.msaaSamples, maxSamples);
+    }
+
+    /** Brings the buffers and texture filtering in line with GraphicsSettings, which may have changed since the last frame. */
+    private void applySettings() {
+        Loader.updateAnisotropy();
+        shadowRenderer.setMapSize(GraphicsSettings.shadowMapSize);
+        waterFrameBuffers.setHeight(GraphicsSettings.waterBufferHeight);
+        if (GraphicsSettings.antiAliasing && multisampledScene.getSamples() != samples()) {
+            multisampledScene.cleanUp();
+            multisampledScene = new Fbo(scene.getWidth(), scene.getHeight(), samples());
+        }
     }
 
     /** Sends finished frames into a buffer instead of the window (null switches back), e.g. to save screenshots. */
@@ -55,11 +73,15 @@ public class FramePipeline {
 
     /** @param sun the light that casts shadows and glints on the water (normally lights.get(0)) */
     public void render(List<Entity> entities, Terrain[][] terrains, List<Light> lights, Camera camera, List<WaterTile> waterTiles, Light sun) {
+        applySettings();
+        FrameProfiler.beginFrame();
+
         // 1. shadows
         if (GraphicsSettings.shadows) {
             shadowRenderer.render(entities, terrains, sun, camera);
         }
-        renderer.setShadows(shadowRenderer.getToShadowMapSpace(), shadowRenderer.getShadowMap());
+        renderer.setShadows(shadowRenderer.getToShadowMapSpace(), shadowRenderer.getShadowMap(), shadowRenderer.getMapSize());
+        FrameProfiler.endPass();
 
         // 2. water: the scene mirrored below the surface, then the part under the surface.
         //    Fine ground cover (anything that casts no shadow) is left out of the mirror image, and only things
@@ -82,10 +104,12 @@ public class FramePipeline {
         GL11.glEnable(GL30.GL_CLIP_DISTANCE0);
         camera.getViewPointPosition().y += distance;
         camera.invertPitch();
+        FrameProfiler.endPass();
         waterFrameBuffers.bindRefractionFrameBuffer();
         renderer.renderScene(submerged, terrains, lights, camera, new Vector4f(0, -1, 0, waterHeight + 3f));
         GL11.glDisable(GL30.GL_CLIP_DISTANCE0);
         waterFrameBuffers.unbindCurrentFrameBuffer();
+        FrameProfiler.endPass();
 
         // 3. main view
         Fbo target = GraphicsSettings.antiAliasing ? multisampledScene : scene;
@@ -95,9 +119,11 @@ public class FramePipeline {
         ParticleMaster.renderParticles(camera);
         if (target == multisampledScene) multisampledScene.resolveTo(scene);
         Fbo.unbind();
+        FrameProfiler.endPass();
 
         // 4. to the window
         postProcessing.present(scene.getColourTexture(), output);
+        FrameProfiler.endPass();
     }
 
     public void cleanUp() {

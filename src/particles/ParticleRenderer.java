@@ -11,6 +11,7 @@ import org.lwjgl.util.vector.Vector3f;
 
 import entities.Camera;
 import models.RawModel;
+import renderEngine.FrameProfiler;
 import renderEngine.GraphicsSettings;
 import renderEngine.Loader;
 import toolbox.Maths;
@@ -59,6 +60,7 @@ public class ParticleRenderer {
 			}
 			Loader.updateVbo(vbo, vboData, buffer);
 			GL31.glDrawArraysInstanced(GL11.GL_TRIANGLE_STRIP, 0, quad.vertexCount(), particleList.size());
+			FrameProfiler.countDraw(2 * particleList.size());
 		}
 		finishRendering();
 	}

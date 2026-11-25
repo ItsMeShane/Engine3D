@@ -5,6 +5,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
+import renderEngine.FrameProfiler;
 import renderEngine.GraphicsSettings;
 import renderEngine.Loader;
 import shaders.ShaderProgram;
@@ -96,6 +97,7 @@ public class PostProcessing {
         GL13.glActiveTexture(GL13.GL_TEXTURE0);
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, sceneTexture);
         GL11.glDrawArrays(GL11.GL_TRIANGLE_STRIP, 0, quad.vertexCount());
+        FrameProfiler.countDraw(2);
         present.stop();
 
         GL20.glDisableVertexAttribArray(0);
@@ -110,6 +112,7 @@ public class PostProcessing {
         GL13.glActiveTexture(GL13.GL_TEXTURE0);
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, sourceTexture);
         GL11.glDrawArrays(GL11.GL_TRIANGLE_STRIP, 0, quad.vertexCount());
+        FrameProfiler.countDraw(2);
     }
 
     public void cleanUp() {

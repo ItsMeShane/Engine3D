@@ -37,6 +37,7 @@ public class TerrainRenderer implements Serializable {
             prepareTerrain(terrain);
             loadModelMatrix(terrain);
             GL11.glDrawElements(GL11.GL_TRIANGLES, terrain.getModel().vertexCount(), GL11.GL_UNSIGNED_INT, 0);
+            FrameProfiler.countDraw(terrain.getModel().vertexCount() / 3);
             unbindTexturedModel();
         }
     }

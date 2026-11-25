@@ -11,13 +11,13 @@ import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector4f;
 import shaders.ShaderProgram;
 import shaders.StaticShader;
-import shadows.ShadowRenderer;
 import shaders.TerrainShader;
 import skybox.SkyboxRenderer;
 import terrains.Terrain;
+import toolbox.Maths;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -37,13 +37,19 @@ public class MasterRenderer {
     private final SkyboxRenderer skyboxRenderer;
     private final TerrainShader terrainShader = new TerrainShader();
 
-    private final Map<TexturedModel, List<Entity>> entities = new HashMap<>();
+    /**
+     * The entities to draw this pass, one batch per model. Batches stay (emptied after every pass) in the order their
+     * models first came up, so the draw order never changes when culling leaves a model out: otherwise surfaces at
+     * exactly the same depth (seams between touching meshes) could flicker from frame to frame.
+     */
+    private final Map<TexturedModel, List<Entity>> entities = new LinkedHashMap<>();
     private final List<Terrain> terrains = new ArrayList<>();
+    private final Frustum frustum = new Frustum();
 
     /** Texture unit the shadow map of the sun is bound to for both scene shaders. */
     public static final int SHADOW_MAP_UNIT = 5;
     private Matrix4f toShadowMapSpace = new Matrix4f();
-    private int shadowMap;
+    private int shadowMap, shadowMapSize = 1;
 
     public MasterRenderer() {
         enableCulling();
@@ -62,10 +68,11 @@ public class MasterRenderer {
         terrainShader.stop();
     }
 
-    /** Shadow map of the sun and the matrix that takes world positions into it (see ShadowRenderer). */
-    public void setShadows(Matrix4f toShadowMapSpace, int shadowMap) {
+    /** Shadow map of the sun, its width in texels and the matrix that takes world positions into it (see ShadowRenderer). */
+    public void setShadows(Matrix4f toShadowMapSpace, int shadowMap, int shadowMapSize) {
         this.toShadowMapSpace = toShadowMapSpace;
         this.shadowMap = shadowMap;
+        this.shadowMapSize = shadowMapSize;
     }
 
     /** Per-pass uniforms shared by the entity and terrain shaders (shaders/glsl/lighting.glsl). */
@@ -73,7 +80,7 @@ public class MasterRenderer {
         shader.set("linearLighting", GraphicsSettings.linearLighting);
         shader.set("shadowsEnabled", GraphicsSettings.shadows);
         shader.set("normalMapping", GraphicsSettings.normalMapping);
-        shader.set("shadowMapSize", (float) ShadowRenderer.MAP_SIZE);
+        shader.set("shadowMapSize", (float) shadowMapSize);
         shader.set("toShadowMapSpace", toShadowMapSpace);
         shader.set("fogDensity", Environment.fogDensity);
         shader.set("ambientSky", Environment.ambientSky);
@@ -81,15 +88,21 @@ public class MasterRenderer {
     }
 
     public void renderScene(List<Entity> entities, Terrain[][] terrains, List<Light> lights, Camera camera, Vector4f clipPlane) {
+        // only what the camera can see (and what the water pass doesn't clip away) is drawn
+        frustum.set(projectionMatrix, Maths.createViewMatrix(camera), clipPlane);
 
         // terrains
         for (int i = 0; i < 3; i++)
-            for (int j = 0; j < 3; j++)
-                processTerrain(terrains[j][i]);
+            for (int j = 0; j < 3; j++) {
+                Terrain terrain = terrains[j][i];
+                if (frustum.contains(terrain.getBoundsCentre(), terrain.getBoundsRadius())) processTerrain(terrain);
+            }
 
         // entities
-        for (Entity entity : entities)
-            processEntity(entity);
+        for (Entity entity : entities) {
+            List<Entity> batch = this.entities.computeIfAbsent(entity.getModel(), model -> new ArrayList<>());
+            if (frustum.contains(entity)) batch.add(entity);
+        }
 
         render(lights, camera, clipPlane);
 
@@ -141,23 +154,11 @@ public class MasterRenderer {
         if (true) skyboxRenderer.render(camera, Environment.fogColour.x, Environment.fogColour.y, Environment.fogColour.z);
 
         terrains.clear();
-        entities.clear();
+        for (List<Entity> batch : entities.values()) batch.clear();
     }
 
     public void processTerrain(Terrain terrain) {
         terrains.add(terrain);
-    }
-
-    public void processEntity(Entity entity) {
-        TexturedModel entityModel = entity.getModel();
-        List<Entity> batch = entities.get(entityModel);
-        if (batch != null) {
-            batch.add(entity);
-        } else {
-            List<Entity> newBatch = new ArrayList<>();
-            newBatch.add(entity);
-            entities.put(entityModel, newBatch);
-        }
     }
 
     public void cleanUp() {

@@ -106,6 +106,11 @@ public class Fbo {
         return height;
     }
 
+    /** Samples per pixel; 0 = not multisampled. */
+    public int getSamples() {
+        return samples;
+    }
+
     public void cleanUp() {
         GL30.glDeleteFramebuffers(frameBuffer);
         GL30.glDeleteRenderbuffers(depthBuffer);

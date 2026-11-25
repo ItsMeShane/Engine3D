@@ -14,6 +14,9 @@ import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 import postProcessing.Fbo;
 import renderEngine.DisplayManager;
+import renderEngine.FrameProfiler;
+import renderEngine.Frustum;
+import renderEngine.GraphicsSettings;
 import shaders.ShaderProgram;
 import terrains.Terrain;
 import textures.ModelTexture;
@@ -25,7 +28,6 @@ import java.util.List;
 
 public class ShadowRenderer {
 
-    public static final int MAP_SIZE = 4096;
     /** Half-width of the shadowed box around the focus point, and its half-depth along the sun direction. */
     private static final float BOX_RADIUS = 330, BOX_DEPTH = 520;
 
@@ -46,19 +48,30 @@ public class ShadowRenderer {
     }
 
     private final ShadowShader shader = new ShadowShader();
-    private final int frameBuffer, depthTexture;
+    private final int frameBuffer;
+    private int depthTexture, mapSize;
     private final Matrix4f worldToShadowClip = new Matrix4f();
     private final Matrix4f toShadowMapSpace = new Matrix4f();
+    private final Frustum shadowBox = new Frustum();
 
     public ShadowRenderer() {
         frameBuffer = GL30.glGenFramebuffers();
         GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, frameBuffer);
         GL11.glDrawBuffer(GL11.GL_NONE);
         GL11.glReadBuffer(GL11.GL_NONE);
+        Fbo.unbind();
+        setMapSize(GraphicsSettings.shadowMapSize);
+    }
 
+    /** Width and height of the shadow map in texels; makes a new map when the size changes (render thread only). */
+    public void setMapSize(int size) {
+        if (size == mapSize) return;
+        if (depthTexture != 0) GL11.glDeleteTextures(depthTexture);
+        mapSize = size;
+        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, frameBuffer);
         depthTexture = GL11.glGenTextures();
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, depthTexture);
-        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL14.GL_DEPTH_COMPONENT24, MAP_SIZE, MAP_SIZE, 0, GL11.GL_DEPTH_COMPONENT, GL11.GL_FLOAT, (ByteBuffer) null);
+        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL14.GL_DEPTH_COMPONENT24, size, size, 0, GL11.GL_DEPTH_COMPONENT, GL11.GL_FLOAT, (ByteBuffer) null);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
@@ -77,7 +90,7 @@ public class ShadowRenderer {
         updateMatrices(sun, camera.getFocusPoint().getPosition());
 
         GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, frameBuffer);
-        GL11.glViewport(0, 0, MAP_SIZE, MAP_SIZE);
+        GL11.glViewport(0, 0, mapSize, mapSize);
         GL11.glEnable(GL11.GL_DEPTH_TEST);
         GL11.glClear(GL11.GL_DEPTH_BUFFER_BIT);
         GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL); // push depths back a little: stops surfaces shadowing themselves
@@ -94,8 +107,12 @@ public class ShadowRenderer {
         shader.set("numberOfRows", 1f);
         shader.set("offset", 0, 0);
         shader.set("wind", 0, 0);
+        // Only what lies inside the shadowed box is drawn. Along the sun's direction a thing and its shadow fall on
+        // the same spot of the map, so nothing outside the box can shadow anything inside it.
+        shadowBox.set(worldToShadowClip);
         for (Terrain[] row : terrains) {
             for (Terrain terrain : row) {
+                if (!shadowBox.contains(terrain.getBoundsCentre(), terrain.getBoundsRadius())) continue;
                 shader.set("transformationMatrix", Maths.createTransformationMatrix(new Vector3f(terrain.getX(), 0, terrain.getZ()), 0, 0, 0, 1));
                 draw(terrain.getModel());
             }
@@ -104,7 +121,7 @@ public class ShadowRenderer {
         // entities
         for (Entity entity : entities) {
             ModelTexture texture = entity.getModel().texture();
-            if (!texture.castsShadow()) continue;
+            if (!texture.castsShadow() || !shadowBox.contains(entity)) continue;
             boolean cutout = texture.hasTransparency();
             if (cutout) {
                 GL11.glDisable(GL11.GL_CULL_FACE);
@@ -132,6 +149,7 @@ public class ShadowRenderer {
         GL20.glEnableVertexAttribArray(0);
         GL20.glEnableVertexAttribArray(1);
         GL11.glDrawElements(GL11.GL_TRIANGLES, model.vertexCount(), GL11.GL_UNSIGNED_INT, 0);
+        FrameProfiler.countDraw(model.vertexCount() / 3);
     }
 
     /**
@@ -146,7 +164,7 @@ public class ShadowRenderer {
         right.normalise();
         Vector3f up = Vector3f.cross(toSun, right, null);
 
-        float texel = 2 * BOX_RADIUS / MAP_SIZE;
+        float texel = 2 * BOX_RADIUS / mapSize;
         float cx = (float) Math.floor(Vector3f.dot(right, centre) / texel) * texel;
         float cy = (float) Math.floor(Vector3f.dot(up, centre) / texel) * texel;
         float cz = Vector3f.dot(toSun, centre);
@@ -180,6 +198,10 @@ public class ShadowRenderer {
 
     public int getShadowMap() {
         return depthTexture;
+    }
+
+    public int getMapSize() {
+        return mapSize;
     }
 
     public void cleanUp() {

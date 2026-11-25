@@ -27,12 +27,15 @@ public class EntityRenderer {
 	}
 
 	public void render(Map<TexturedModel, List<Entity>> entities) {
-		for (TexturedModel model : entities.keySet()) {
+		for (Map.Entry<TexturedModel, List<Entity>> entry : entities.entrySet()) {
+			List<Entity> batch = entry.getValue();
+			if (batch.isEmpty()) continue; // every copy of this model was culled
+			TexturedModel model = entry.getKey();
 			prepareTexturedModels(model);
-			List<Entity> batch = entities.get(model);
 			for (Entity entity : batch) {
 				prepareInstance(entity);
 				GL11.glDrawElements(GL11.GL_TRIANGLES, model.rawModel().vertexCount(), GL11.GL_UNSIGNED_INT, 0);
+				FrameProfiler.countDraw(model.rawModel().vertexCount() / 3);
 			}
 			unbindTexturedModel();
 		}

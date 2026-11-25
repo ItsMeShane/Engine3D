@@ -25,6 +25,8 @@ public class Terrain {
     private boolean[][] otherDiagonal;
     private final HeightSource heightSource;
     private int vertexCount;
+    private final Vector3f boundsCentre = new Vector3f();
+    private float boundsRadius;
 
     public Terrain(int gridX, int gridZ, TerrainTexturePack texturePack, TerrainTexture blendMap) {
         this(gridX, gridZ, texturePack, blendMap, null);
@@ -38,6 +40,29 @@ public class Terrain {
         this.z = gridX * SIZE;
         this.x = gridZ * SIZE;
         this.model = generateTerrain();
+        computeBounds();
+    }
+
+    /** A sphere around the whole tile: its middle, half way between its lowest and highest point. */
+    private void computeBounds() {
+        float min = Float.MAX_VALUE, max = -Float.MAX_VALUE;
+        for (float[] column : terrainHeights)
+            for (float height : column) {
+                min = Math.min(min, height);
+                max = Math.max(max, height);
+            }
+        float half = SIZE / 2f, halfHeight = (max - min) / 2;
+        boundsCentre.set(x + half, (min + max) / 2, z + half);
+        boundsRadius = (float) Math.sqrt(2 * half * half + halfHeight * halfHeight);
+    }
+
+    /** Centre of a sphere that holds the whole tile, for culling (see renderEngine.Frustum). */
+    public Vector3f getBoundsCentre() {
+        return boundsCentre;
+    }
+
+    public float getBoundsRadius() {
+        return boundsRadius;
     }
 
     public float getHeightOfTerrain(float x, float z) {

@@ -8,6 +8,7 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.util.vector.Matrix4f;
 import renderEngine.Environment;
+import renderEngine.FrameProfiler;
 import renderEngine.GraphicsSettings;
 import renderEngine.Loader;
 
@@ -110,6 +111,7 @@ public class SkyboxRenderer implements Serializable {
         bindTextures();
         GL11.glDepthFunc(GL11.GL_LEQUAL); // the sky sits at depth 1.0, the value the depth buffer is cleared to
         GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, cube.vertexCount());
+        FrameProfiler.countDraw(cube.vertexCount() / 3);
         GL11.glDepthFunc(GL11.GL_LESS);
         GL20.glDisableVertexAttribArray(0);
         GL30.glBindVertexArray(0);

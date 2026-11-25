@@ -31,13 +31,24 @@ public class Loader {
         storeDataInAttributesList(1, 2, textureCoords);
         storeDataInAttributesList(2, 3, normals);
         unbindVAO();
-        return new RawModel(vaoID, indices.length);
+        return new RawModel(vaoID, indices.length, radius(positions, 3));
     }
     public static RawModel loadToVAO(float[] positions, int dimensions) {
         int vaoID = createVAO();
         storeDataInAttributesList(0, dimensions, positions);
         unbindVAO();
-        return new RawModel(vaoID, positions.length / dimensions);
+        return new RawModel(vaoID, positions.length / dimensions, radius(positions, dimensions));
+    }
+
+    /** Distance from the origin to the farthest of the points (each {@code dimensions} floats). */
+    private static float radius(float[] positions, int dimensions) {
+        double max = 0;
+        for (int i = 0; i + dimensions <= positions.length; i += dimensions) {
+            double sum = 0;
+            for (int j = 0; j < dimensions; j++) sum += positions[i + j] * positions[i + j];
+            max = Math.max(max, sum);
+        }
+        return (float) Math.sqrt(max);
     }
 
     public static int createEmptyVBO(int floatCount) {
@@ -81,7 +92,7 @@ public class Loader {
         int textureID = texture.getTextureID();
         textures.add(textureID);
         textures2D.add(textureID);
-        applyAnisotropy(textureID);
+        applyAnisotropy(textureID, anisotropyAmount());
         return textureID;
     }
 
@@ -100,15 +111,27 @@ public class Loader {
         return textureID;
     }
 
-    /** Sets (or, when the setting is off, removes) anisotropic filtering on every loaded 2D texture. */
-    public static void applyAnisotropy() {
-        for (int textureID : textures2D) applyAnisotropy(textureID);
+    /**
+     * Call once per frame on the render thread: when the anisotropic filtering settings changed, sets the new level
+     * (or, with the setting off, none) on every loaded 2D texture.
+     */
+    public static void updateAnisotropy() {
+        float amount = anisotropyAmount();
+        if (amount == appliedAnisotropy) return;
+        appliedAnisotropy = amount;
+        for (int textureID : textures2D) applyAnisotropy(textureID, amount);
     }
 
-    private static void applyAnisotropy(int textureID) {
+    private static float appliedAnisotropy = -1;
+
+    /** The level the settings ask for, as far as the graphics card allows; 1 = none. */
+    private static float anisotropyAmount() {
+        if (!GraphicsSettings.anisotropicFiltering || !GLContext.getCapabilities().GL_EXT_texture_filter_anisotropic) return 1;
+        return Math.min(GraphicsSettings.anisotropy, GL11.glGetFloat(EXTTextureFilterAnisotropic.GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT));
+    }
+
+    private static void applyAnisotropy(int textureID, float amount) {
         if (!GLContext.getCapabilities().GL_EXT_texture_filter_anisotropic) return;
-        float amount = GraphicsSettings.anisotropicFiltering
-                ? Math.min(GraphicsSettings.MAX_ANISOTROPY, GL11.glGetFloat(EXTTextureFilterAnisotropic.GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT)) : 1;
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID);
         GL11.glTexParameterf(GL11.GL_TEXTURE_2D, EXTTextureFilterAnisotropic.GL_TEXTURE_MAX_ANISOTROPY_EXT, amount);
     }

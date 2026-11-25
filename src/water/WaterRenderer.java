@@ -10,6 +10,7 @@ import org.lwjgl.opengl.GL30;
 import org.lwjgl.util.vector.Matrix4f;
 import renderEngine.DisplayManager;
 import renderEngine.Environment;
+import renderEngine.FrameProfiler;
 import renderEngine.GraphicsSettings;
 import renderEngine.Loader;
 
@@ -48,6 +49,7 @@ public class WaterRenderer {
 		for (WaterTile tile : water) {
 			shader.loadModelMatrix(tile.transformationMatrix());
 			GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, quad.vertexCount());
+			FrameProfiler.countDraw(quad.vertexCount() / 3);
 		}
 		unbind();
 	}

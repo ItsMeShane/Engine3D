@@ -48,9 +48,13 @@ import java.util.List;
 public class MainGameLoop {
 
 	public static void main(String[] args) throws IOException {
+		GraphicsSettings.load(); // graphics.properties, if saved from the editor: before any renderer makes its buffers
+
 		// --record / --preview: render the scene's b-roll shots to files instead of running interactively
 		BRollRecorder recorder = BRollRecorder.fromArgs(args);
 		if (recorder != null) DisplayManager.setRenderSize(recorder.width(), recorder.height());
+		// --bench: play the b-roll shots as fast as possible and report the frame rate (see Benchmark)
+		Benchmark benchmark = recorder == null ? Benchmark.fromArgs(args) : null;
 
 		DisplayManager.createDisplay();
 
@@ -84,8 +88,9 @@ public class MainGameLoop {
 		// scripted camera moves from broll/<scene>.txt: B plays them, N skips to the next, K prints the current view as a keyframe
 		HeightSource ground = (x, z) -> groundHeight(terrains, x, z);
 		BRoll bRoll = new BRoll(Scenes.selectedName(), camera, ground, gameScene);
-		if (recorder != null) {
-			recorder.run(Scenes.selectedName(), bRoll, gameScene, pipeline, entities, terrains, lights, camera, waterTiles);
+		if (recorder != null || benchmark != null) {
+			if (recorder != null) recorder.run(Scenes.selectedName(), bRoll, gameScene, pipeline, entities, terrains, lights, camera, waterTiles);
+			else benchmark.run(Scenes.selectedName(), bRoll, gameScene, pipeline, entities, terrains, lights, camera, waterTiles);
 			ParticleMaster.cleanUp();
 			pipeline.cleanUp();
 			renderer.cleanUp();
